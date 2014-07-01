@@ -20,7 +20,7 @@ module Scorer
 
       def get_with_caching(path)
         begin
-          connection["#{api_version}#{path}"].get
+          res = connection["#{api_version}#{path}"].get
         rescue
           puts "Encountered Error in get_with_caching: #{$!}"
           clear_connections
@@ -31,6 +31,11 @@ module Scorer
       def put(path, updates={})
         set_response_headers(connection["#{api_version}#{path}"].put(updates))
       end
+      
+      def post(path, updates={})
+        set_response_headers(connection["#{api_version}#{path}"].post(updates))
+      end
+
 
       def connection
         raise NoToken if @token.to_s.empty?

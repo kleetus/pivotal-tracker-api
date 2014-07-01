@@ -24,6 +24,12 @@ class PivotalService
       @project = Scorer::Project.parse_json_project(json_project)
     end
 
+    def find_story(project_id, story_id)
+      api_url = "/projects/#{project_id}/stories/#{story_id}"
+      response = Scorer::Client.get(api_url)
+      OpenStruct.new(JSON.parse(response, {:symbolize_names => true}))
+    end
+
     def activity(project_id, story_id=0, limit=20)
       api_url = "/projects/#{project_id}/"
       api_url = api_url + "stories/#{story_id}/" if story_id > 0
@@ -68,7 +74,7 @@ class PivotalService
     def stories(project, should_cache, ids=[], fields=[])
       @stories = Array.new
       api_url = append_fields('/projects' + "/#{project.id}/stories", fields)
-      api_url = api_url.rindex('?fields=') ? "#{api_url}&filter=id%3A" : "#{api_url}?filter=id%3A"
+      api_url = api_url.rindex('?fields=') ? "#{api_url}&filter=includedone%3Atrue%20id%3A" : "#{api_url}?filter=includedone%3Atrue%20id%3A"
       if ids.size == 1
         api_url = api_url + ids[0].to_s
         if should_cache
@@ -105,6 +111,11 @@ class PivotalService
       response = Scorer::Client.get_with_caching(api_url)
       json_comments = JSON.parse(response, {:symbolize_names => true})
       Scorer::Comment.parse_json_comments(json_comments, story)
+    end
+    
+    def post_comments(project_id, story_id, comment_text)
+      api_url = "/projects/#{project_id}/stories/#{story_id}/comments"
+      Scorer::Client.post(api_url, {text: comment_text}) 
     end
 
     private
